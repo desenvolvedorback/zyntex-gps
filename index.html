@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Rastreador - Última posição</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <style>
+    body { font-family: Arial, sans-serif; padding:20px; background:#111; color:#dfe; }
+    .card { background:#222; padding:16px; border-radius:8px; box-shadow: 0 4px 14px rgba(0,0,0,0.6); }
+    label, input, button { display:block; margin-bottom:8px; }
+    a.btn { display:inline-block; padding:8px 12px; background:#0b84ff; color:white; border-radius:6px; text-decoration:none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Ver última posição do dispositivo</h2>
+    <label for="device">Device serial:</label>
+    <input id="device" placeholder="ABC123456789" value="ABC123456789"/>
+    <button id="btn">Buscar</button>
+    <div id="result" style="margin-top:12px;"></div>
+  </div>
+
+  <script>
+    const btn = document.getElementById('btn');
+    btn.addEventListener('click', async () => {
+      const dev = document.getElementById('device').value.trim();
+      if (!dev) return alert('Informe o device');
+      const result = document.getElementById('result');
+      result.innerHTML = 'Buscando...';
+      try {
+        // Ajuste a URL do servidor se estiver em outro host/porta
+        const resp = await fetch(`http://SEU_SERVIDOR:5000/last/${encodeURIComponent(dev)}`);
+        if (!resp.ok) throw new Error('Não encontrado');
+        const j = await resp.json();
+        const mapLink = `https://www.google.com/maps/search/?api=1&query=${j.lat},${j.lon}`;
+        result.innerHTML = `
+          <b>Device:</b> ${j.device} <br/>
+          <b>Lat, Lon:</b> ${j.lat}, ${j.lon} <br/>
+          <b>Alt (m):</b> ${j.alt} <br/>
+          <b>HDOP:</b> ${j.hdop} <br/>
+          <b>Time (device):</b> ${j.time} <br/>
+          <b>Recebido:</b> ${j.received_at} <br/>
+          <a class="btn" target="_blank" href="${mapLink}">Abrir no Google Maps</a>
+        `;
+      } catch (e) {
+        result.innerHTML = 'Erro: ' + e.message;
+      }
+    });
+  </script>
+</body>
+</html>
